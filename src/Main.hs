@@ -1,36 +1,31 @@
 {-# LANGUAGE OverloadedStrings #-}  -- allows "string literals" to be Text
 module Main where
 
-import Control.Monad (when)
-import Data.Text (isPrefixOf, toLower, Text)
-import Control.Concurrent (threadDelay)
 import qualified Data.Text.IO as TIO
-
 import Discord
 import Discord.Types
 import qualified Discord.Requests as R
 
+
+import EventHandlers
+
+-- | TODO: 
+-- 1. Read token from config file
+-- 2. Add bark,bribe,bef ( befriend with Eugleniu) commands. Eugleniu will count how many friends has in a file
+-- 3. .bef and .bark will work only after some relatively big time intervals, compared to bribe. If bribed, it will respond with eyes
+-- 4. uptime feature
+-- 5. 
+
+
 -- | Replies "pong" to every message that starts with "ping"
-pingpongExample :: IO ()
-pingpongExample = do userFacingError <- runDiscord $ def
-                                            { discordToken ="Discord Bot Token" 
-                                            , discordOnEvent = eventHandler }
-                     TIO.putStrLn userFacingError
+connect :: IO ()
+connect = do 
+    userFacingError <- runDiscord $ def 
+            { discordToken = "NzI4MTk5MjE4MzEyOTA0NzE1.XwYkbw.ISmybDsz-nGD32ifW1QYzCbIt-c"
+            , discordOnEvent = onDiscordEventHandler 
+            }
+    TIO.putStrLn userFacingError
 
-eventHandler :: DiscordHandle -> Event -> IO ()
-eventHandler dis event = case event of
-       MessageCreate m -> when (not (fromBot m) && isPing (messageText m)) $ do
-               _ <- restCall dis (R.CreateReaction (messageChannel m, messageId m) "eyes")
-               threadDelay (4 * 10^6)
-               _ <- restCall dis (R.CreateMessage (messageChannel m) "Pong!")
-               pure ()
-       _ -> pure ()
-
-fromBot :: Message -> Bool
-fromBot m = userIsBot (messageAuthor m)
-
-isPing :: Text -> Bool
-isPing = ("ping" `isPrefixOf`) . toLower
 
 main :: IO ()
-main = pingpongExample
+main = connect
