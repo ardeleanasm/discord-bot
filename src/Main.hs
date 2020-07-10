@@ -21,7 +21,7 @@ import EventHandlers
 connect :: IO ()
 connect = do 
     userFacingError <- runDiscord $ def 
-            { discordToken = "NzI4MTk5MjE4MzEyOTA0NzE1.XwYkbw.ISmybDsz-nGD32ifW1QYzCbIt-c"
+            { discordToken = "Token"
             , discordOnEvent = onDiscordEventHandler 
             }
     TIO.putStrLn userFacingError
