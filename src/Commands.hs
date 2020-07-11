@@ -29,7 +29,8 @@ executeCommand dis m = when (not (fromBot m) ) $ do
     pure ()
 
 parseCommand :: Text -> IO ()
-parseCommand rxMessage = Nothing
+parseCommand rxMessage = pure()
+--Nothing
 
 
 -- | Commands 

@@ -1,12 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}  -- allows "string literals" to be Text
 module Main where
-
+import Data.Text(unpack) --TO BE REMOVED, JUST FOR DEBUG
+import Data.Text.Internal
 import qualified Data.Text.IO as TIO
 import Discord
 import Discord.Types
 import qualified Discord.Requests as R
-
-
+import System.Environment (getArgs,getProgName)
+import System.Directory (doesFileExist)
 import EventHandlers
 
 -- | TODO: 
@@ -18,14 +19,20 @@ import EventHandlers
 
 
 -- | Replies "pong" to every message that starts with "ping"
-connect :: IO ()
-connect = do 
+connect :: Text -> IO ()
+connect token = do 
     userFacingError <- runDiscord $ def 
-            { discordToken = "Token"
+            { discordToken = token
             , discordOnEvent = onDiscordEventHandler 
             }
     TIO.putStrLn userFacingError
 
-
 main :: IO ()
-main = connect
+main = do
+    args <- getArgs
+    fileExists <- doesFileExist $ args !! 0 
+    if fileExists == True then do
+        content <- TIO.readFile path
+        connect content
+    else do
+        putStrLn "File does not exists"
