@@ -6,23 +6,23 @@ module Commands (
     ) where
 import Control.Monad.IO.Class 
 import Control.Monad (when)
-import Data.Text (isPrefixOf, toLower, Text,pack)
+import Data.Text (isPrefixOf, toLower, Text,pack,unpack)
 import Data.Time
 import Control.Concurrent (threadDelay)
 import qualified Data.Text.IO as TIO
 
+import System.Directory (doesFileExist)
 import Discord
 import Discord.Types
 import qualified Discord.Requests as R
 
 
 
-data AvailableCommand = PING | UPTIME | NONE deriving (Eq, Show)
+data AvailableCommand = ALLCOMMANDS| PING | UPTIME | NONE deriving (Eq, Show)
 
 data CommandContext = CommandContext {
       handler :: DiscordHandle
     , message :: Message
-    , startTime :: UTCTime
     } 
 
 execute :: CommandContext -> IO ()
@@ -30,28 +30,47 @@ execute cmd = when (not (fromBot $ message cmd)) $ do
     case (parseCommand $ messageText (message cmd)) of
         PING -> pingResponse cmd 
         UPTIME -> uptimeResponse cmd
-
+        ALLCOMMANDS -> allCommandsResponse cmd
 
 
 parseCommand :: Text -> AvailableCommand
-parseCommand receivedMessage 
-    | isPing receivedMessage    = PING
-    | isUptime receivedMessage  = UPTIME
-    | otherwise                 = NONE
+parseCommand receivedMessage
+    | isAllCommands receivedMessage = ALLCOMMANDS
+    | isPing receivedMessage        = PING
+    | isUptime receivedMessage      = UPTIME
+    | otherwise                     = NONE
     
 
 
+
 -- | Commands
+
+allCommandsResponse :: CommandContext -> IO ()
+allCommandsResponse cmd = do
+    _ <- restCall (handler cmd) (R.CreateMessage (messageChannel (message cmd)) "botall,ping, uptime")
+    pure ()
+    
+
 uptimeResponse :: CommandContext -> IO () 
 uptimeResponse cmd= do
     _ <- restCall (handler cmd) (R.CreateReaction (messageChannel (message cmd), messageId (message cmd)) "fire")
     threadDelay (1 * 10^6)
-    now <- getCurrentTime
-    zero <- return (startTime cmd)
-    _ <- restCall (handler cmd) (R.CreateMessage (messageChannel (message cmd)) (pack $ pretty (diffUTCTime now zero)))
 
-    pure ()
+    fileExists <- doesFileExist "/home/mihai/config_bot"
+    if fileExists == True then do
+        content <- TIO.readFile "/home/mihai/config_bot"
+    
+        now <- getCurrentTime
+        zero <- return (parseTimeString (unpack content))
+        _ <- restCall (handler cmd) (R.CreateMessage (messageChannel (message cmd)) (pack $ pretty (diffUTCTime now zero)))
+        pure ()
+        
+    else do
+        putStrLn "File does not exists"
 
+parseTimeString :: String -> UTCTime
+parseTimeString s = parseTimeOrError True defaultTimeLocale "%0Y-%m-%d %H:%M:%S%Q UTC" s
+    
 
 pingResponse :: CommandContext -> IO ()
 pingResponse cmd = do 
@@ -70,6 +89,8 @@ isPing = ("ping" `isPrefixOf`) . toLower
 isUptime :: Text -> Bool
 isUptime = ("uptime" `isPrefixOf`) . toLower
 
+isAllCommands :: Text -> Bool
+isAllCommands = ("botall" `isPrefixOf`) . toLower
 
 pretty :: NominalDiffTime -> String
 pretty diff =

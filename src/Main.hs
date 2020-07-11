@@ -12,7 +12,6 @@ import System.Directory (doesFileExist)
 import Data.Time
 import Data.Maybe
 import Control.Monad (when)
-import Control.Lens
 import Commands
 
 -- | TODO: 
@@ -22,15 +21,8 @@ import Commands
 -- 4. uptime feature
 -- 5. 
 
-data BotState = BotState
-    {
-        _botCurrentTime :: Maybe UTCTime
-    } deriving (Show)
 
-makeLenses ''BotState
 
-startCurrentTime::BotState
-startCurrentTime = BotState Nothing
 
 connect :: Text -> IO ()
 connect token = do 
@@ -44,17 +36,14 @@ connect token = do
 onDiscordStartEventHandler :: DiscordHandle -> IO ()
 onDiscordStartEventHandler dis = do
     currentTime <- getCurrentTime
+    TIO.writeFile "/home/mihai/config_bot" (pack $ show currentTime)
+    TIO.putStrLn (pack $ show currentTime)
 
-    _ <- return (set botCurrentTime (Just currentTime) startCurrentTime)
-    TIO.putStrLn $ pack ( show (view botCurrentTime startCurrentTime))
 
-
-newCurrentTime :: UTCTime -> IO BotState
-newCurrentTime t = return (BotState (Just t))
 
 onDiscordEventHandler :: DiscordHandle -> Event -> IO ()
 onDiscordEventHandler dis event = case event of
-    MessageCreate m -> execute CommandContext{handler = dis, message = m,startTime = fromJust (view botCurrentTime startCurrentTime)} 
+    MessageCreate m -> execute CommandContext{handler = dis, message = m} 
     _ -> pure ()
 
 parseArgument :: [String] -> IO (String)

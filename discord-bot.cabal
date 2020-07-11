@@ -62,7 +62,6 @@ executable discord-bot
                      , text
                      , directory
                      , time
-                     , lens
   -- Directories containing source files.
   hs-source-dirs:      src
 
