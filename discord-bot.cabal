@@ -52,6 +52,7 @@ executable discord-bot
 
   -- Modules included in this executable, other than Main.
   other-modules:       Commands
+                     , ConfigParser
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
@@ -61,7 +62,9 @@ executable discord-bot
                      , discord-haskell
                      , text
                      , directory
+                     , filepath
                      , time
+                     , aeson
   -- Directories containing source files.
   hs-source-dirs:      src
 

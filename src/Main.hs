@@ -8,20 +8,21 @@ import Discord
 import Discord.Types
 import qualified Discord.Requests as R
 import System.Environment (getArgs,getProgName)
-import System.Directory (doesFileExist)
+import System.Directory (doesFileExist,createDirectoryIfMissing,getAppUserDataDirectory)
+import System.FilePath ((</>))
 import Data.Time
 import Data.Maybe
 import Control.Monad (when)
+import Control.Applicative
 import Commands
 
 -- | TODO: 
--- 1. Read token from config file
 -- 2. Add bark,bribe,bef ( befriend with Eugleniu) commands. Eugleniu will count how many friends has in a file
 -- 3. .bef and .bark will work only after some relatively big time intervals, compared to bribe. If bribed, it will respond with eyes
--- 4. uptime feature
 -- 5. 
-
-
+-- 6. Implement config file in folder .discord-bot with each configuration per line. It will
+-- contain also the token!
+-- 7. config file is in JSON FORMAT!
 
 
 connect :: Text -> IO ()
@@ -35,6 +36,9 @@ connect token = do
 
 onDiscordStartEventHandler :: DiscordHandle -> IO ()
 onDiscordStartEventHandler dis = do
+    configDirectoryPath <- getAppUserDataDirectory "discord-bot"
+    _ <- createDirectoryIfMissing False configDirectoryPath
+
     currentTime <- getCurrentTime
     TIO.writeFile "/home/mihai/config_bot" (pack $ show currentTime)
     TIO.putStrLn (pack $ show currentTime)
@@ -51,6 +55,7 @@ parseArgument args = do
     case args of
         [path] -> return (path)
         [] -> return ("")
+
 
 main :: IO ()
 main = do
