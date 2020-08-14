@@ -58,7 +58,7 @@ executable discord-bot
   -- other-extensions:
 
   -- Other library packages from which modules are imported.
-  build-depends:       base
+  build-depends:       base >=4.11 && <4.12
                      , discord-haskell
                      , text
                      , directory
