@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}  -- allows "string literals" to be Text
-{-# LANGUAGE TemplateHaskell, RankNTypes #-}
 module Main where
 import Data.Text(unpack,pack) --TO BE REMOVED, JUST FOR DEBUG
 import Data.Text.Internal
@@ -15,7 +14,7 @@ import Data.Maybe
 import Control.Monad (when)
 import Control.Applicative
 import Commands
-
+import ConfigParser
 -- | TODO: 
 -- 2. Add bark,bribe,bef ( befriend with Eugleniu) commands. Eugleniu will count how many friends has in a file
 -- 3. .bef and .bark will work only after some relatively big time intervals, compared to bribe. If bribed, it will respond with eyes
@@ -36,9 +35,6 @@ connect token = do
 
 onDiscordStartEventHandler :: DiscordHandle -> IO ()
 onDiscordStartEventHandler dis = do
-    configDirectoryPath <- getAppUserDataDirectory "discord-bot"
-    _ <- createDirectoryIfMissing False configDirectoryPath
-
     currentTime <- getCurrentTime
     TIO.writeFile "/home/mihai/config_bot" (pack $ show currentTime)
     TIO.putStrLn (pack $ show currentTime)
@@ -50,20 +46,14 @@ onDiscordEventHandler dis event = case event of
     MessageCreate m -> execute CommandContext{handler = dis, message = m} 
     _ -> pure ()
 
-parseArgument :: [String] -> IO (String)
-parseArgument args = do 
-    case args of
-        [path] -> return (path)
-        [] -> return ("")
 
 
 main :: IO ()
 main = do
-    args <- getArgs
-    path <- parseArgument args
-    fileExists <- doesFileExist path
-    if fileExists == True then do
-        content <- TIO.readFile path
-        connect content
-    else do
-        putStrLn "File does not exists"
+    configDirectoryPath <- getAppUserDataDirectory "discord-bot"
+    _ <- createDirectoryIfMissing False configDirectoryPath
+    configFile <-return $ configDirectoryPath ++ "/config.json"
+    configuration <- parseConfiguration configFile
+    case configuration of 
+        Left err -> putStrLn "Error"
+        Right cfg -> connect $ pack $ botDiscordToken cfg

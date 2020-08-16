@@ -65,6 +65,7 @@ executable discord-bot
                      , filepath
                      , time
                      , aeson
+                     , bytestring
   -- Directories containing source files.
   hs-source-dirs:      src
 
